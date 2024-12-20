@@ -2,10 +2,6 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
 
-// 直接在代码中设置 GitHub 用户名和 PAT
-const GITHUB_USERNAME = 'your-username'  // 替换为你的 GitHub 用户名
-const GITHUB_PAT = 'your-pat'           // 替换为你的 GitHub Personal Access Token
-
 const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -127,8 +123,14 @@ async function handleRequest(request) {
     })
   }
   
+  // 定义环境变量 GITHUB_USERNAME 和 GITHUB_PAT
+  const GITHUB_USERNAME = 'Your_GitHub_Username' // 替换为你的 GitHub 用户名
+  const GITHUB_PAT = 'Your_GitHub_PAT' // 替换为你的 GitHub PAT，只开放 repo 权限即可
+  
+  // 构建 GitHub raw 内容的 URL
   const githubUrl = `https://raw.githubusercontent.com/${GITHUB_USERNAME}${path}`
   
+  // 创建新的请求，添加必要的头部
   const modifiedRequest = new Request(githubUrl, {
     method: request.method,
     headers: {
@@ -138,13 +140,19 @@ async function handleRequest(request) {
     }
   })
   
+  // 发送请求并返回响应
   try {
     const response = await fetch(modifiedRequest)
+    
+    // 如果响应不成功，抛出错误
     if (!response.ok) {
       throw new Error(`GitHub API responded with ${response.status}: ${response.statusText}`)
     }
+    
+    // 创建新的响应，保留原始内容但移除敏感头部
     const newResponse = new Response(response.body, response)
     newResponse.headers.delete('Authorization')
+    
     return newResponse
   } catch (error) {
     return new Response(`Error: ${error.message}`, { status: 500 })
